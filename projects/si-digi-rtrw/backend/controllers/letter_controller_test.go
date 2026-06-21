@@ -13,24 +13,10 @@ import (
 	"si-digi-rtrw-backend/models"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 func setupLetterTestDB() {
-	// Try connecting using Docker credentials, then fallback to local host credentials
-	dsn := "root:rootpassword@tcp(127.0.0.1:3306)/si_digi_rtrw_test?charset=utf8mb4&parseTime=True&loc=Local"
-	var err error
-	config.DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		dsn = "root:root@tcp(127.0.0.1:3306)/si_digi_rtrw_test?charset=utf8mb4&parseTime=True&loc=Local"
-		config.DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-		if err != nil {
-			panic("Failed to connect to test database: " + err.Error())
-		}
-	}
-	config.DB.AutoMigrate(&models.Letter{})
-	config.DB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Letter{})
+	setupTestDB()
 }
 
 func TestGetLetterRequestsIsolation(t *testing.T) {
