@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Home, Users, FileText, Bell, ShieldAlert } from 'lucide-react';
+import { Users, FileText, Bell, ShieldAlert } from 'lucide-react';
 import Login from './pages/Login';
 import Residents from './pages/admin/Residents';
 
