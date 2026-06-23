@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Plus, TrendingUp, TrendingDown, Wallet, X } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { type User } from '../../context/AuthContext';
+import axios from 'axios';
 
 interface Transaction {
   id: number;
@@ -29,7 +31,6 @@ const Finance: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [levelFilter, setLevelFilter] = useState<'RT' | 'RW' | ''>(''); // default to empty (both/jurisdiction defaults)
-  const isInitialized = useRef(false);
 
   // Form modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +42,22 @@ const Finance: React.FC = () => {
   const [newRt, setNewRt] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  // Sync state during render when user shifts from null to non-null
+  const [prevUser, setPrevUser] = useState<User | null>(null);
+  if (user !== prevUser) {
+    setPrevUser(user);
+    if (user) {
+      if (user.role === 'Admin RT') {
+        setNewLevel('RT');
+        setLevelFilter('RT');
+      } else if (user.role === 'Admin RW') {
+        setNewLevel('RW');
+        setLevelFilter('RW');
+      }
+    }
+  }
+
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -52,31 +68,19 @@ const Finance: React.FC = () => {
       ]);
       setReports(reportsRes.data || []);
       setSummary(summaryRes.data || { total_income: 0, total_expense: 0, balance: 0 });
-    } catch (err: any) {
+    } catch {
       setError('Gagal memuat rekap keuangan kas dari server');
     } finally {
       setLoading(false);
     }
-  };
+  }, [levelFilter]);
 
-  // Auto-set transaction level based on user role and fetch data
   useEffect(() => {
     if (!user) return;
-
-    if (!isInitialized.current) {
-      isInitialized.current = true;
-      if (user.role === 'Admin RT') {
-        setNewLevel('RT');
-        setLevelFilter('RT');
-      } else if (user.role === 'Admin RW') {
-        setNewLevel('RW');
-        setLevelFilter('RW');
-      }
-      return;
-    }
-
-    fetchData();
-  }, [user, levelFilter]);
+    Promise.resolve().then(() => {
+      fetchData();
+    });
+  }, [user, fetchData]);
 
   const handleCreateTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,8 +120,12 @@ const Finance: React.FC = () => {
 
       // Refresh data
       fetchData();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Gagal merekam transaksi keuangan');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        alert(err.response?.data?.error || 'Gagal merekam transaksi keuangan');
+      } else {
+        alert('Gagal merekam transaksi keuangan');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -130,7 +138,7 @@ const Finance: React.FC = () => {
   const formatShortDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };
