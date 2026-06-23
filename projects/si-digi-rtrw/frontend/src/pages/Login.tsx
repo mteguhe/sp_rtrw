@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Placeholder for actual login logic
-    console.log('Login attempt:', { username, password });
-    
-    // Simulate successful login for now
-    if (username && password) {
-      alert('Login simulasi berhasil! (Backend connection required for real auth)');
-      navigate('/');
-    } else {
+    if (!username || !password) {
       setError('Username dan password wajib diisi');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await login(username, password);
+      navigate('/admin/residents');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Login gagal, periksa kembali username dan password Anda');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -43,32 +49,41 @@ const Login: React.FC = () => {
           )}
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <input
+              id="username"
+              name="username"
               type="text"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
               placeholder="Masukkan username"
+              disabled={submitting}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
+              id="password"
+              name="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
               placeholder="••••••••"
+              disabled={submitting}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-primary/20"
+            disabled={submitting}
+            className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-800 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
           >
-            Masuk
+            {submitting ? 'Menghubungkan...' : 'Masuk'}
           </button>
         </form>
 
