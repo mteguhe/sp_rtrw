@@ -1,75 +1,89 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Bell, LogOut, Menu, X } from 'lucide-react';
+import React, { type ReactNode } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Users, LogOut } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
-interface LayoutProps {
-  children: React.ReactNode;
-  role: string;
+interface DashboardLayoutProps {
+  children: ReactNode;
 }
 
-const DashboardLayout: React.FC<LayoutProps> = ({ children, role }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isResidentsActive = location.pathname === '/admin/residents';
 
   const handleLogout = () => {
-    // simulation
+    logout();
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { name: 'Data Warga', icon: Users, path: '/admin/residents' },
-    { name: 'Persuratan', icon: FileText, path: '/admin/letters' },
-    { name: 'Pengumuman', icon: Bell, path: '/admin/announcements' },
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500 font-bold">Memuat...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <p className="text-red-500 font-bold mb-4">Anda belum masuk ke sistem</p>
+        <button 
+          onClick={() => navigate('/login')} 
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+        >
+          Menuju Halaman Login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className={`bg-white border-r border-gray-200 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} flex flex-col`}>
-        <div className="p-6 flex items-center justify-between">
-          {isSidebarOpen && <span className="font-bold text-xl text-primary">SI-DIGI</span>}
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-gray-100 rounded">
-            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col justify-between">
+        <div className="p-6">
+          <Link to="/" className="text-xl font-extrabold text-blue-600 tracking-wider">
+            SI-DIGI RT/RW
+          </Link>
+          
+          <nav className="mt-8 space-y-2">
+            <Link 
+              to="/admin/residents" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
+                isResidentsActive 
+                  ? 'text-primary bg-primary/10' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              Data Warga
+            </Link>
+          </nav>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className="flex items-center p-3 rounded-xl text-gray-600 hover:bg-primary/5 hover:text-primary transition-colors"
-            >
-              <item.icon className="w-6 h-6" />
-              {isSidebarOpen && <span className="ml-3 font-medium">{item.name}</span>}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-gray-100">
+        {/* User profile & logout */}
+        <div className="p-6 border-t border-gray-100 space-y-4">
+          <div>
+            <p className="font-bold text-gray-800 text-sm truncate">{user.username}</p>
+            <p className="text-xs text-gray-500">{user.role} {user.rt && `RT ${user.rt}`} {user.rw && `RW ${user.rw}`}</p>
+          </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 transition-colors"
           >
-            <LogOut className="w-6 h-6" />
-            {isSidebarOpen && <span className="ml-3 font-medium">Keluar</span>}
+            <LogOut className="w-4 h-4" />
+            Keluar
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-          <h2 className="font-semibold text-gray-800">Panel {role}</h2>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500">Selamat datang, <span className="font-bold text-gray-700">Admin RT 01</span></span>
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">A</div>
-          </div>
-        </header>
-        <div className="p-8">
-          {children}
-        </div>
+      <main className="flex-1 p-10 overflow-y-auto">
+        {children}
       </main>
     </div>
   );

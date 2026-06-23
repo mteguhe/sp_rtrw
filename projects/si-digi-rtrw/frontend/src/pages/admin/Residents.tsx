@@ -11,7 +11,7 @@ const Residents: React.FC = () => {
   ];
 
   return (
-    <DashboardLayout role="Admin RT">
+    <DashboardLayout>
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Manajemen Warga</h1>
