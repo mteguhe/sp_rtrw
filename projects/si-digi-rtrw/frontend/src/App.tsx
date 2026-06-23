@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Users, FileText, Bell, ShieldAlert } from 'lucide-react';
 import Login from './pages/Login';
 import Residents from './pages/admin/Residents';
+import Finance from './pages/admin/Finance';
 
 const LandingPage = () => (
   <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -52,6 +53,7 @@ const App: React.FC = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin/residents" element={<Residents />} />
+        <Route path="/admin/finance" element={<Finance />} />
       </Routes>
     </Router>
   );
