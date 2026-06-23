@@ -76,9 +76,9 @@ type Finance struct {
 	Type        string         `gorm:"type:enum('Pemasukan', 'Pengeluaran');not null" json:"type"`
 	Category    string         `json:"category"` // Kebersihan, Keamanan, Kas, dll
 	Description string         `json:"description"`
-	Level       string         `json:"level"` // RT, RW
-	RT          string         `json:"rt"`
-	RW          string         `json:"rw"`
+	Level       string         `gorm:"index" json:"level"` // RT, RW
+	RT          string         `gorm:"index" json:"rt"`
+	RW          string         `gorm:"index" json:"rw"`
 	Date        time.Time      `json:"date"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`

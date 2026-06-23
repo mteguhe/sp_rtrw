@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Plus, TrendingUp, TrendingDown, Wallet, X } from 'lucide-react';
 import api from '../../services/api';
@@ -29,6 +29,7 @@ const Finance: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [levelFilter, setLevelFilter] = useState<'RT' | 'RW' | ''>(''); // default to empty (both/jurisdiction defaults)
+  const isInitialized = useRef(false);
 
   // Form modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,19 +40,6 @@ const Finance: React.FC = () => {
   const [newLevel, setNewLevel] = useState<'RT' | 'RW'>('RT');
   const [newRt, setNewRt] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Auto-set transaction level based on user role
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'Admin RT') {
-        setNewLevel('RT');
-        setLevelFilter('RT');
-      } else if (user.role === 'Admin RW') {
-        setNewLevel('RW');
-        setLevelFilter('RW');
-      }
-    }
-  }, [user]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -71,9 +59,24 @@ const Finance: React.FC = () => {
     }
   };
 
+  // Auto-set transaction level based on user role and fetch data
   useEffect(() => {
+    if (!user) return;
+
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      if (user.role === 'Admin RT') {
+        setNewLevel('RT');
+        setLevelFilter('RT');
+      } else if (user.role === 'Admin RW') {
+        setNewLevel('RW');
+        setLevelFilter('RW');
+      }
+      return;
+    }
+
     fetchData();
-  }, [levelFilter]);
+  }, [user, levelFilter]);
 
   const handleCreateTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
