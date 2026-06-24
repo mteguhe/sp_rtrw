@@ -121,8 +121,15 @@ func ApproveLetter(c *gin.Context) {
 		return
 	}
 
-	config.DB.Save(&letter)
-	config.DB.Preload("Applicant").Preload("Subject").First(&letter, letter.ID)
+	if err := config.DB.Save(&letter).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save letter approval"})
+		return
+	}
+
+	if err := config.DB.Preload("Applicant").Preload("Subject").First(&letter, letter.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load letter relations"})
+		return
+	}
 	c.JSON(http.StatusOK, letter)
 }
 
