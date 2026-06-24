@@ -199,3 +199,50 @@ func GetFamilyDetails(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, family)
 }
+
+func GetMyFamily(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var uID uint
+	switch v := userID.(type) {
+	case float64:
+		uID = uint(v)
+	case uint:
+		uID = v
+	case int:
+		uID = uint(v)
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type in context"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Resident").First(&user, uID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if user.ResidentID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not linked to any resident record"})
+		return
+	}
+
+	familyID := user.Resident.FamilyID
+	if familyID == 0 {
+		c.JSON(http.StatusOK, []models.Resident{user.Resident})
+		return
+	}
+
+	var residents []models.Resident
+	if err := config.DB.Where("family_id = ?", familyID).Find(&residents).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch family members"})
+		return
+	}
+
+	c.JSON(http.StatusOK, residents)
+}
+

@@ -21,6 +21,9 @@ func SetupRoutes(r *gin.Engine) {
 		api.GET("/announcements", controllers.GetAnnouncements)
 		api.POST("/announcements", middleware.RoleMiddleware("Admin RT", "Admin RW"), controllers.CreateAnnouncement)
 
+		// Family
+		api.GET("/my-family", controllers.GetMyFamily)
+
 		// Finance
 		api.GET("/finance/reports", controllers.GetFinanceReports)
 		api.GET("/finance/summary", controllers.GetBalanceSummary)
