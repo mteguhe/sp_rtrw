@@ -35,8 +35,17 @@ func CreateLetterRequest(c *gin.Context) {
 		letter.RW = rwStr
 	}
 
-	userID, _ := c.Get("user_id")
-	letter.ApplicantID = uint(userID.(float64))
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userIDVal, ok := userID.(float64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	letter.ApplicantID = uint(userIDVal)
 	letter.Status = models.PendingRT
 
 	if err := config.DB.Create(&letter).Error; err != nil {
@@ -97,7 +106,7 @@ func ApproveLetter(c *gin.Context) {
 	}
 
 	var letter models.Letter
-	query := config.DB
+	query := config.DB.Preload("Applicant").Preload("Subject")
 
 	if roleStr == "Admin RT" {
 		query = query.Where("rt = ? AND rw = ?", rtStr, rwStr)
@@ -114,7 +123,6 @@ func ApproveLetter(c *gin.Context) {
 		letter.Status = models.PendingRW
 	} else if roleStr == "Admin RW" && letter.Status == models.PendingRW {
 		letter.Status = models.Approved
-		// Trigger PDF Generation Placeholder
 		letter.PDFUrl = "/storage/letters/generated-letter-" + id + ".pdf"
 	} else {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid approval stage"})
@@ -123,11 +131,6 @@ func ApproveLetter(c *gin.Context) {
 
 	if err := config.DB.Save(&letter).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save letter approval"})
-		return
-	}
-
-	if err := config.DB.Preload("Applicant").Preload("Subject").First(&letter, letter.ID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load letter relations"})
 		return
 	}
 	c.JSON(http.StatusOK, letter)
