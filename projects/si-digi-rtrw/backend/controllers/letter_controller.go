@@ -122,6 +122,7 @@ func ApproveLetter(c *gin.Context) {
 	}
 
 	config.DB.Save(&letter)
+	config.DB.Preload("Applicant").Preload("Subject").First(&letter, letter.ID)
 	c.JSON(http.StatusOK, letter)
 }
 

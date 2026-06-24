@@ -74,15 +74,32 @@ func TestGetLetterRequestsIsolation(t *testing.T) {
 		t.Fatalf("Expected 1 letter (RT 01 only), got %d", len(list))
 	}
 
-	// Ensure Applicant and Subject keys exist in response
+	// Ensure Applicant and Subject keys exist in response and have expected values
 	var responseMap []map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &responseMap)
 	if len(responseMap) > 0 {
-		if _, exists := responseMap[0]["applicant"]; !exists {
+		applicant, exists := responseMap[0]["applicant"]
+		if !exists {
 			t.Errorf("Expected applicant preload, key not found")
+		} else {
+			appMap, ok := applicant.(map[string]interface{})
+			if !ok {
+				t.Errorf("Expected applicant to be a map")
+			} else if appMap["username"] != "applicant_user" {
+				t.Errorf("Expected applicant username 'applicant_user', got '%v'", appMap["username"])
+			}
 		}
-		if _, exists := responseMap[0]["subject"]; !exists {
+
+		subject, exists := responseMap[0]["subject"]
+		if !exists {
 			t.Errorf("Expected subject preload, key not found")
+		} else {
+			subjMap, ok := subject.(map[string]interface{})
+			if !ok {
+				t.Errorf("Expected subject to be a map")
+			} else if subjMap["full_name"] != "Resident Subject" {
+				t.Errorf("Expected subject full_name 'Resident Subject', got '%v'", subjMap["full_name"])
+			}
 		}
 	}
 }
