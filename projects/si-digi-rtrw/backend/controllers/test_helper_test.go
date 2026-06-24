@@ -27,6 +27,7 @@ func setupTestDB() {
 		&models.Announcement{},
 		&models.Finance{},
 		&models.Letter{},
+		&models.Complaint{},
 	)
 
 	config.DB.Exec("SET FOREIGN_KEY_CHECKS = 0;")
@@ -36,5 +37,6 @@ func setupTestDB() {
 	config.DB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Family{})
 	config.DB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Letter{})
 	config.DB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Finance{})
+	config.DB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Complaint{})
 	config.DB.Exec("SET FOREIGN_KEY_CHECKS = 1;")
 }

@@ -111,3 +111,27 @@ type Letter struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
+
+type ComplaintStatus string
+
+const (
+	StatusDiterima ComplaintStatus = "Diterima"
+	StatusDiproses ComplaintStatus = "Diproses"
+	StatusSelesai  ComplaintStatus = "Selesai"
+)
+
+type Complaint struct {
+	ID          uint            `gorm:"primaryKey" json:"id"`
+	Title       string          `gorm:"not null" json:"title"`
+	Description string          `gorm:"type:text;not null" json:"description"`
+	PhotoURL    string          `gorm:"not null" json:"photo_url"`
+	Status      ComplaintStatus `gorm:"type:varchar(20);default:'Diterima'" json:"status"`
+	ReporterID  uint            `json:"reporter_id"`
+	Reporter    User            `gorm:"foreignKey:ReporterID" json:"reporter"`
+	RT          string          `json:"rt"`
+	RW          string          `json:"rw"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt  `gorm:"index" json:"-"`
+}
+
