@@ -8,6 +8,9 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
+	// Serve static files from the uploads directory
+	r.Static("/uploads", "./uploads")
+
 	// Public routes
 	r.POST("/api/login", controllers.Login)
 	r.POST("/api/register", controllers.Register)
@@ -34,6 +37,11 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/letters", controllers.CreateLetterRequest)
 		api.POST("/letters/:id/approve", middleware.RoleMiddleware("Admin RT", "Admin RW"), controllers.ApproveLetter)
 		api.POST("/letters/:id/reject", middleware.RoleMiddleware("Admin RT", "Admin RW"), controllers.RejectLetter)
+
+		// Complaints
+		api.POST("/complaints", controllers.CreateComplaint)
+		api.GET("/complaints", controllers.GetComplaints)
+		api.PUT("/complaints/:id/status", controllers.UpdateComplaintStatus)
 
 		api.GET("/profile", func(c *gin.Context) {
 			userID, _ := c.Get("user_id")
