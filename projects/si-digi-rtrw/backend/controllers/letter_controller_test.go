@@ -173,6 +173,32 @@ func TestApproveLetterIsolation(t *testing.T) {
 		t.Errorf("Expected 200 for same scope approval, got %d", w1.Code)
 	}
 
+	var responseMap map[string]interface{}
+	json.Unmarshal(w1.Body.Bytes(), &responseMap)
+	applicant, exists := responseMap["applicant"]
+	if !exists {
+		t.Errorf("Expected applicant preload in ApproveLetter response, key not found")
+	} else {
+		appMap, ok := applicant.(map[string]interface{})
+		if !ok {
+			t.Errorf("Expected applicant to be a map")
+		} else if appMap["username"] != "applicant_user" {
+			t.Errorf("Expected applicant username 'applicant_user', got '%v'", appMap["username"])
+		}
+	}
+
+	subject, exists := responseMap["subject"]
+	if !exists {
+		t.Errorf("Expected subject preload in ApproveLetter response, key not found")
+	} else {
+		subjMap, ok := subject.(map[string]interface{})
+		if !ok {
+			t.Errorf("Expected subject to be a map")
+		} else if subjMap["full_name"] != "Resident Subject" {
+			t.Errorf("Expected subject full_name 'Resident Subject', got '%v'", subjMap["full_name"])
+		}
+	}
+
 	// 2. Try approving letter in a different RT scope (should return 404 since it's not found in scope query)
 	req2, _ := http.NewRequest("POST", fmt.Sprintf("/letters/%d/approve", letterDiffScope.ID), nil)
 	w2 := httptest.NewRecorder()

@@ -171,6 +171,9 @@ func RejectLetter(c *gin.Context) {
 		return
 	}
 
-	config.DB.Save(&letter)
+	if err := config.DB.Save(&letter).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save letter rejection"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "Letter request rejected"})
 }
