@@ -78,8 +78,16 @@ func GetLetterRequests(c *gin.Context) {
 	} else if roleStr == "Admin RW" {
 		query = query.Where("status = ? AND rw = ?", models.PendingRW, rwStr)
 	} else if roleStr == "Warga" {
-		userID, _ := c.Get("user_id")
-		userIDVal, _ := userID.(float64)
+		userID, exists := c.Get("user_id")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+		userIDVal, ok := userID.(float64)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
 		query = query.Where("applicant_id = ?", uint(userIDVal))
 	}
 
@@ -129,7 +137,7 @@ func ApproveLetter(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB.Save(&letter).Error; err != nil {
+	if err := config.DB.Omit("Applicant", "Subject").Save(&letter).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save letter approval"})
 		return
 	}
