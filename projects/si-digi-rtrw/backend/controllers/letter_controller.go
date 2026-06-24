@@ -47,8 +47,9 @@ func CreateLetterRequest(c *gin.Context) {
 	}
 	letter.ApplicantID = uint(userIDVal)
 	letter.Status = models.PendingRT
+	letter.PDFUrl = ""
 
-	if err := config.DB.Create(&letter).Error; err != nil {
+	if err := config.DB.Omit("Applicant", "Subject").Create(&letter).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create letter request"})
 		return
 	}
@@ -182,7 +183,7 @@ func RejectLetter(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB.Save(&letter).Error; err != nil {
+	if err := config.DB.Omit("Applicant", "Subject").Save(&letter).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save letter rejection"})
 		return
 	}
