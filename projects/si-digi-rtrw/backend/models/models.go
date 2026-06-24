@@ -98,7 +98,9 @@ type Letter struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	Type        string         `json:"type"` // Domisili, Pengantar
 	ApplicantID uint           `json:"applicant_id"` // User who applied
+	Applicant   User           `gorm:"foreignKey:ApplicantID" json:"applicant"`
 	SubjectID   uint           `json:"subject_id"`   // Resident the letter is for
+	Subject     Resident       `gorm:"foreignKey:SubjectID" json:"subject"`
 	Purpose     string         `json:"purpose"`
 	Validity    string         `json:"validity"`
 	Status      LetterStatus   `gorm:"type:varchar(20);default:'Menunggu RT'" json:"status"`

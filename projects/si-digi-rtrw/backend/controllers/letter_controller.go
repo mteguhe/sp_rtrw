@@ -74,7 +74,7 @@ func GetLetterRequests(c *gin.Context) {
 		query = query.Where("applicant_id = ?", uint(userIDVal))
 	}
 
-	if err := query.Find(&letters).Error; err != nil {
+	if err := query.Preload("Applicant").Preload("Subject").Find(&letters).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch letter requests"})
 		return
 	}

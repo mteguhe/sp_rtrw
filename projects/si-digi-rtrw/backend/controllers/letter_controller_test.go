@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"si-digi-rtrw-backend/config"
 	"si-digi-rtrw-backend/controllers"
@@ -19,13 +20,34 @@ func setupLetterTestDB() {
 	setupTestDB()
 }
 
+func seedUserAndResident(t *testing.T) (uint, uint) {
+	fam := models.Family{NoKK: "1111222233334444", Address: "Jl. Letter", RT: "01", RW: "03"}
+	if err := config.DB.Create(&fam).Error; err != nil {
+		t.Fatalf("Failed to seed family: %v", err)
+	}
+
+	res := models.Resident{FullName: "Resident Subject", RT: "01", RW: "03", NIK: "11112222", DateOfBirth: time.Now(), FamilyID: fam.ID}
+	if err := config.DB.Create(&res).Error; err != nil {
+		t.Fatalf("Failed to seed resident: %v", err)
+	}
+
+	user := models.User{Username: "applicant_user", Password: "pwd", Role: "Warga", ResidentID: res.ID}
+	if err := config.DB.Create(&user).Error; err != nil {
+		t.Fatalf("Failed to seed user: %v", err)
+	}
+
+	return user.ID, res.ID
+}
+
 func TestGetLetterRequestsIsolation(t *testing.T) {
 	setupLetterTestDB()
 	gin.SetMode(gin.TestMode)
 
+	userID, residentID := seedUserAndResident(t)
+
 	// Seed letters
-	letter1 := models.Letter{Type: "Domisili", RT: "01", RW: "03", Status: models.PendingRT}
-	letter2 := models.Letter{Type: "Domisili", RT: "02", RW: "03", Status: models.PendingRT}
+	letter1 := models.Letter{Type: "Domisili", RT: "01", RW: "03", Status: models.PendingRT, ApplicantID: userID, SubjectID: residentID}
+	letter2 := models.Letter{Type: "Domisili", RT: "02", RW: "03", Status: models.PendingRT, ApplicantID: userID, SubjectID: residentID}
 	config.DB.Create(&letter1)
 	config.DB.Create(&letter2)
 
@@ -51,25 +73,40 @@ func TestGetLetterRequestsIsolation(t *testing.T) {
 	if len(list) != 1 {
 		t.Fatalf("Expected 1 letter (RT 01 only), got %d", len(list))
 	}
+
+	// Ensure Applicant and Subject keys exist in response
+	var responseMap []map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &responseMap)
+	if len(responseMap) > 0 {
+		if _, exists := responseMap[0]["applicant"]; !exists {
+			t.Errorf("Expected applicant preload, key not found")
+		}
+		if _, exists := responseMap[0]["subject"]; !exists {
+			t.Errorf("Expected subject preload, key not found")
+		}
+	}
 }
 
 func TestCreateLetterRequestIsolation(t *testing.T) {
 	setupLetterTestDB()
 	gin.SetMode(gin.TestMode)
 
+	userID, residentID := seedUserAndResident(t)
+
 	r := gin.New()
 	r.POST("/letters", func(c *gin.Context) {
 		c.Set("role", "Warga")
-		c.Set("user_id", float64(12))
+		c.Set("user_id", float64(userID))
 		c.Set("rt", "01")
 		c.Set("rw", "03")
 		controllers.CreateLetterRequest(c)
 	})
 
 	payload := map[string]interface{}{
-		"type": "Domisili",
-		"rt":   "09", // attempt to override to a different RT
-		"rw":   "09", // attempt to override to a different RW
+		"type":       "Domisili",
+		"rt":         "09", // attempt to override to a different RT
+		"rw":         "09", // attempt to override to a different RW
+		"subject_id": residentID,
 	}
 	body, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", "/letters", bytes.NewBuffer(body))
@@ -94,9 +131,11 @@ func TestApproveLetterIsolation(t *testing.T) {
 	setupLetterTestDB()
 	gin.SetMode(gin.TestMode)
 
+	userID, residentID := seedUserAndResident(t)
+
 	// Seed letters
-	letterSameScope := models.Letter{Type: "Domisili", RT: "01", RW: "03", Status: models.PendingRT}
-	letterDiffScope := models.Letter{Type: "Domisili", RT: "02", RW: "03", Status: models.PendingRT}
+	letterSameScope := models.Letter{Type: "Domisili", RT: "01", RW: "03", Status: models.PendingRT, ApplicantID: userID, SubjectID: residentID}
+	letterDiffScope := models.Letter{Type: "Domisili", RT: "02", RW: "03", Status: models.PendingRT, ApplicantID: userID, SubjectID: residentID}
 	config.DB.Create(&letterSameScope)
 	config.DB.Create(&letterDiffScope)
 
@@ -131,9 +170,11 @@ func TestRejectLetterIsolation(t *testing.T) {
 	setupLetterTestDB()
 	gin.SetMode(gin.TestMode)
 
+	userID, residentID := seedUserAndResident(t)
+
 	// Seed letters
-	letterSameScope := models.Letter{Type: "Domisili", RT: "01", RW: "03", Status: models.PendingRT}
-	letterDiffScope := models.Letter{Type: "Domisili", RT: "02", RW: "03", Status: models.PendingRT}
+	letterSameScope := models.Letter{Type: "Domisili", RT: "01", RW: "03", Status: models.PendingRT, ApplicantID: userID, SubjectID: residentID}
+	letterDiffScope := models.Letter{Type: "Domisili", RT: "02", RW: "03", Status: models.PendingRT, ApplicantID: userID, SubjectID: residentID}
 	config.DB.Create(&letterSameScope)
 	config.DB.Create(&letterDiffScope)
 
