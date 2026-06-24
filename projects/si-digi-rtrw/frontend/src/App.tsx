@@ -6,6 +6,7 @@ import Residents from './pages/admin/Residents';
 import Finance from './pages/admin/Finance';
 import Announcements from './pages/admin/Announcements';
 import Letters from './pages/admin/Letters';
+import Complaints from './pages/admin/Complaints';
 import PublicAnnouncements from './pages/public/PublicAnnouncements';
 
 const LandingPage = () => (
@@ -59,6 +60,7 @@ const App: React.FC = () => {
         <Route path="/admin/finance" element={<Finance />} />
         <Route path="/admin/announcements" element={<Announcements />} />
         <Route path="/admin/letters" element={<Letters />} />
+        <Route path="/admin/complaints" element={<Complaints />} />
         <Route path="/pengumuman" element={<PublicAnnouncements />} />
       </Routes>
     </Router>

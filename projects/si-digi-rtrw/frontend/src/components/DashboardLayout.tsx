@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Users, LogOut, DollarSign } from 'lucide-react';
+import { Users, LogOut, DollarSign, FileText, Bell, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface DashboardLayoutProps {
@@ -13,7 +13,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
 
   const isResidentsActive = location.pathname === '/admin/residents';
+  const isLettersActive = location.pathname === '/admin/letters';
   const isFinanceActive = location.pathname === '/admin/finance';
+  const isAnnouncementsActive = location.pathname === '/admin/announcements';
+  const isComplaintsActive = location.pathname === '/admin/complaints';
 
   const handleLogout = () => {
     logout();
@@ -64,6 +67,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               Data Warga
             </Link>
             <Link 
+              to="/admin/letters" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
+                isLettersActive 
+                  ? 'text-primary bg-primary/10' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+              }`}
+            >
+              <FileText className="w-5 h-5" />
+              Persuratan
+            </Link>
+            <Link 
               to="/admin/finance" 
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
                 isFinanceActive 
@@ -73,6 +87,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             >
               <DollarSign className="w-5 h-5" />
               Keuangan Kas
+            </Link>
+            <Link 
+              to="/admin/announcements" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
+                isAnnouncementsActive 
+                  ? 'text-primary bg-primary/10' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+              }`}
+            >
+              <Bell className="w-5 h-5" />
+              Pengumuman
+            </Link>
+            <Link 
+              to="/admin/complaints" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
+                isComplaintsActive 
+                  ? 'text-primary bg-primary/10' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+              }`}
+            >
+              <AlertTriangle className="w-5 h-5" />
+              Pengaduan
             </Link>
           </nav>
         </div>
