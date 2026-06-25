@@ -16,9 +16,11 @@ func main() {
 	// Initialize Database
 	config.ConnectDatabase()
 
-	// Auto Migration
+	// Auto Migration (order matters: parents first to avoid FK errors)
 	fmt.Println("Running Auto Migration...")
-	config.DB.AutoMigrate(&models.User{}, &models.Resident{}, &models.Family{}, &models.Announcement{}, &models.Finance{}, &models.Letter{})
+	config.DB.Exec("SET FOREIGN_KEY_CHECKS = 0;")
+	config.DB.AutoMigrate(&models.Family{}, &models.Resident{}, &models.User{}, &models.Announcement{}, &models.Finance{}, &models.Letter{}, &models.Complaint{})
+	config.DB.Exec("SET FOREIGN_KEY_CHECKS = 1;")
 
 	// Setup Router
 	r := gin.Default()

@@ -19,7 +19,7 @@ type User struct {
 	Username  string         `gorm:"unique;not null" json:"username"`
 	Password  string         `gorm:"not null" json:"-"`
 	Role      Role           `gorm:"type:enum('Admin RW', 'Admin RT', 'Warga');not null" json:"role"`
-	ResidentID uint          `json:"resident_id"`
+	ResidentID *uint         `json:"resident_id"`
 	Resident   Resident      `gorm:"foreignKey:ResidentID" json:"resident"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`

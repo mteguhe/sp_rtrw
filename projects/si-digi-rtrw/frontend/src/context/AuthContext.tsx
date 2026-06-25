@@ -12,7 +12,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
   logout: () => void;
   loading: boolean;
 }
@@ -74,13 +74,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     localStorage.setItem('token', token);
     setToken(token);
-    setUser({
+    const loggedUser: User = {
       id: payload.user_id,
       username,
       role: payload.role,
       rt: payload.rt,
       rw: payload.rw,
-    });
+    };
+    setUser(loggedUser);
+    return loggedUser;
   };
 
   const logout = () => {

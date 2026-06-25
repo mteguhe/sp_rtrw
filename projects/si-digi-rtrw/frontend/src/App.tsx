@@ -6,6 +6,7 @@ import Finance from './pages/admin/Finance';
 import Announcements from './pages/admin/Announcements';
 import Letters from './pages/admin/Letters';
 import Complaints from './pages/admin/Complaints';
+import Dashboard from './pages/admin/Dashboard';
 import PublicAnnouncements from './pages/public/PublicAnnouncements';
 import LandingPage from './pages/public/LandingPage';
 
@@ -15,6 +16,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/residents" element={<Residents />} />
         <Route path="/admin/finance" element={<Finance />} />
         <Route path="/admin/announcements" element={<Announcements />} />

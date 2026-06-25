@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Users, LogOut, DollarSign, FileText, Bell, AlertTriangle } from 'lucide-react';
+import { Users, LogOut, DollarSign, FileText, Bell, AlertTriangle, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface DashboardLayoutProps {
@@ -12,6 +12,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isDashboardActive = location.pathname === '/admin/dashboard';
   const isResidentsActive = location.pathname === '/admin/residents';
   const isLettersActive = location.pathname === '/admin/letters';
   const isFinanceActive = location.pathname === '/admin/finance';
@@ -56,16 +57,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           
           <nav className="mt-8 space-y-2">
             <Link 
-              to="/admin/residents" 
+              to="/admin/dashboard" 
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
-                isResidentsActive 
+                isDashboardActive 
                   ? 'text-primary bg-primary/10' 
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
               }`}
             >
-              <Users className="w-5 h-5" />
-              Data Warga
+              <LayoutDashboard className="w-5 h-5" />
+              Dashboard
             </Link>
+            {user?.role !== 'Warga' && (
+              <Link 
+                to="/admin/residents" 
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
+                  isResidentsActive 
+                    ? 'text-primary bg-primary/10' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                }`}
+              >
+                <Users className="w-5 h-5" />
+                Data Warga
+              </Link>
+            )}
             <Link 
               to="/admin/letters" 
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${

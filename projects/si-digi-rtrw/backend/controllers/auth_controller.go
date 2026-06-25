@@ -38,7 +38,7 @@ func Login(c *gin.Context) {
 
 	// Load Resident to get RT/RW
 	var resident models.Resident
-	if user.ResidentID != 0 {
+	if user.ResidentID != nil {
 		config.DB.First(&resident, user.ResidentID)
 	}
 
@@ -72,6 +72,8 @@ func Register(c *gin.Context) {
 		Username string      `json:"username" binding:"required"`
 		Password string      `json:"password" binding:"required"`
 		Role     models.Role `json:"role" binding:"required"`
+		NIK      string      `json:"nik"`
+		AdminPin string      `json:"admin_pin"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -79,16 +81,70 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	// 1. Validate Admin registration
+	if input.Role == models.AdminRT || input.Role == models.AdminRW {
+		expectedPin := os.Getenv("ADMIN_REGISTRATION_PIN")
+		if expectedPin == "" {
+			expectedPin = "rtrw-admin-secure-pin-2026" // Default fallback pin
+		}
+		if input.AdminPin != expectedPin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid admin registration pin"})
+			return
+		}
+	}
+
+	var residentID *uint = nil
+
+	// 2. Validate Resident (Warga) linkage
+	if input.Role == models.Warga {
+		if input.NIK == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "NIK is required for Warga registration"})
+			return
+		}
+
+		var resident models.Resident
+		if err := config.DB.Where("nik = ?", input.NIK).First(&resident).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Resident NIK not registered by Admin. Please contact RT admin."})
+			return
+		}
+
+		// Check if resident is already linked to another user account
+		var existingUser models.User
+		if err := config.DB.Where("resident_id = ?", resident.ID).First(&existingUser).Error; err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "An account is already registered for this NIK"})
+			return
+		}
+
+		rid := resident.ID
+		residentID = &rid
+	} else if input.NIK != "" {
+		// Optional linkage for Admins if they supply NIK
+		var resident models.Resident
+		if err := config.DB.Where("nik = ?", input.NIK).First(&resident).Error; err == nil {
+			// Check if resident is already linked
+			var existingUser models.User
+			if err := config.DB.Where("resident_id = ?", resident.ID).First(&existingUser).Error; err != nil {
+				rid := resident.ID
+				residentID = &rid
+			}
+		}
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password"})
+		return
+	}
 
 	user := models.User{
-		Username: input.Username,
-		Password: string(hashedPassword),
-		Role:     input.Role,
+		Username:   input.Username,
+		Password:   string(hashedPassword),
+		Role:       input.Role,
+		ResidentID: residentID,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username already exists or failed to create user"})
 		return
 	}
 

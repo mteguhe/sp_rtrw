@@ -64,7 +64,19 @@ func CreateAnnouncement(c *gin.Context) {
 		return
 	}
 
-	announcement.AuthorID = uint(userID.(float64))
+	var authorID uint
+	switch v := userID.(type) {
+	case float64:
+		authorID = uint(v)
+	case uint:
+		authorID = v
+	case int:
+		authorID = uint(v)
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type in context"})
+		return
+	}
+	announcement.AuthorID = authorID
 	announcement.RW = rwStr
 
 	if roleStr == "Admin RT" {

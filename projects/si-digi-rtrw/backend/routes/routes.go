@@ -67,9 +67,9 @@ func SetupRoutes(r *gin.Engine) {
 		rw := api.Group("/rw")
 		rw.Use(middleware.RoleMiddleware("Admin RW"))
 		{
-			rw.GET("/stats", func(c *gin.Context) {
-				c.JSON(200, gin.H{"message": "RW Level Statistics"})
-			})
 		}
+
+		// Shared stats route for Admins
+		api.GET("/stats", middleware.RoleMiddleware("Admin RT", "Admin RW"), controllers.GetRWStatistics)
 	}
 }

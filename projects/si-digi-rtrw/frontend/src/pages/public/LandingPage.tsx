@@ -27,6 +27,7 @@ interface Announcement {
 
 const LandingPage: React.FC = () => {
   const { user } = useAuth();
+  const dashboardUrl = '/admin/dashboard';
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
   const [errorAnnouncements, setErrorAnnouncements] = useState(false);
@@ -91,7 +92,7 @@ const LandingPage: React.FC = () => {
           <a href="#pengurus-pengumuman" className="hover:text-blue-600 transition-colors">Pengurus & Info</a>
           {user ? (
             <Link
-              to="/admin/residents"
+              to={dashboardUrl}
               className="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold text-xs hover:bg-blue-700 transition-all shadow-md shadow-blue-500/10 flex items-center gap-1.5"
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -131,7 +132,7 @@ const LandingPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {user ? (
               <Link
-                to="/admin/residents"
+                to={dashboardUrl}
                 className="w-full sm:w-auto bg-blue-600 text-white font-extrabold px-8 py-3.5 rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all text-sm shadow-md"
               >
                 Menuju Dashboard
@@ -162,7 +163,7 @@ const LandingPage: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Link
-            to="/admin/residents"
+            to={dashboardUrl}
             className="group bg-white border border-slate-100 hover:border-blue-500 rounded-2xl p-6 text-center hover:shadow-xl hover:shadow-blue-500/5 transition-all flex flex-col items-center"
           >
             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl font-bold mb-4 group-hover:scale-110 transition-transform">
