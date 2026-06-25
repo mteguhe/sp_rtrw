@@ -32,24 +32,30 @@ const LandingPage: React.FC = () => {
   const [errorAnnouncements, setErrorAnnouncements] = useState(false);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const fetchPublicAnnouncements = async () => {
       try {
-        const { data } = await api.get('/api/public/announcements');
+        const { data } = await api.get('/api/public/announcements', { signal: abortController.signal });
         if (Array.isArray(data)) {
           // Sort by newest first and take maximum 3 entries
-          const sorted = data
+          const sorted = [...data]
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .slice(0, 3);
           setAnnouncements(sorted);
+        } else {
+          setErrorAnnouncements(true);
         }
-      } catch {
-        setErrorAnnouncements(true);
+      } catch (err) {
+        const errorName = err && typeof err === 'object' && 'name' in err ? (err as { name: unknown }).name : undefined;
+        if (errorName !== 'CanceledError' && errorName !== 'AbortError') {
+          setErrorAnnouncements(true);
+        }
       } finally {
         setLoadingAnnouncements(false);
       }
     };
 
-    const abortController = new AbortController();
     fetchPublicAnnouncements();
     return () => abortController.abort();
   }, []);
