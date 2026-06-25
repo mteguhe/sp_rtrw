@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"si-digi-rtrw-backend/config"
 	"si-digi-rtrw-backend/models"
@@ -46,11 +47,18 @@ func CreateLetterRequest(c *gin.Context) {
 		return
 	}
 	letter.ApplicantID = uint(userIDVal)
-	letter.Status = models.PendingRT
+	letter.Status = models.Approved
 	letter.PDFUrl = ""
 
 	if err := config.DB.Omit("Applicant", "Subject").Create(&letter).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create letter request"})
+		return
+	}
+
+	// Auto-approve: generate PDF URL immediately using the newly created ID
+	letter.PDFUrl = fmt.Sprintf("/storage/letters/generated-letter-%d.pdf", letter.ID)
+	if err := config.DB.Omit("Applicant", "Subject").Save(&letter).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF URL for auto-approved letter"})
 		return
 	}
 
