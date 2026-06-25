@@ -11,3 +11,10 @@ triage/
 evals/results/
 evals/.venv/
 evals/.env
+
+# Sensitive environment files
+projects/si-digi-rtrw/backend/.env
+**/.env
+
+# Go binaries
+**/si-digi-rtrw-api

@@ -22,7 +22,7 @@ const Login: React.FC = () => {
     setSubmitting(true);
     try {
       await login(username, password);
-      navigate('/admin/residents');
+      navigate('/admin/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login gagal, periksa kembali username dan password Anda');
     } finally {

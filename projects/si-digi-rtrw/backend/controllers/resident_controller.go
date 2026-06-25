@@ -226,7 +226,7 @@ func GetMyFamily(c *gin.Context) {
 		return
 	}
 
-	if user.ResidentID == 0 {
+	if user.ResidentID == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not linked to any resident record"})
 		return
 	}
